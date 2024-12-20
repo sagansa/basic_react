@@ -5,6 +5,8 @@ import DangerButton from '@/Components/DangerButton';
 import { router } from '@inertiajs/react';
 
 export default function Index({ auth, summary, rewards }) {
+    const isAdmin = auth.user.roles.includes('admin') || auth.user.roles.includes('super-admin');
+
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -48,15 +50,20 @@ export default function Index({ auth, summary, rewards }) {
                     {/* Rewards Table */}
                     <div className="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
-                            <div className="flex justify-between mb-6">
-                                <Link href={route('rewards.create')}>
-                                    <PrimaryButton>Create Reward</PrimaryButton>
-                                </Link>
-                            </div>
+                            {!isAdmin && (
+                                <div className="flex justify-between mb-6">
+                                    <Link href={route('rewards.create')}>
+                                        <PrimaryButton>
+                                            Create Reward
+                                        </PrimaryButton>
+                                    </Link>
+                                </div>
+                            )}
 
                             <table className="w-full whitespace-nowrap">
                                 <thead>
                                     <tr className="font-bold text-left bg-gray-50 dark:bg-gray-700">
+                                        <th className="px-6 pt-5 pb-4">User</th>
                                         <th className="px-6 pt-5 pb-4">Subject</th>
                                         <th className="px-6 pt-5 pb-4">Type</th>
                                         <th className="px-6 pt-5 pb-4">Grade</th>
@@ -71,6 +78,9 @@ export default function Index({ auth, summary, rewards }) {
                                 <tbody>
                                     {rewards.map((reward) => (
                                         <tr key={reward.id} className="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <td className="px-6 py-4">
+                                                {reward.user.name}
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <ul>
                                                     {reward.grade.map(grade => (
@@ -132,13 +142,23 @@ export default function Index({ auth, summary, rewards }) {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex space-x-2">
-                                                    <Link href={route('rewards.edit', reward.id)}>
-                                                        <PrimaryButton>Edit</PrimaryButton>
-                                                    </Link>
-                                                    <DangerButton onClick={() => deleteReward(reward.id)}>
-                                                        Delete
-                                                    </DangerButton>
+                                                <div className="flex items-center gap-4">
+                                                    {(isAdmin || reward.status !== 'paid') && (
+                                                        <>
+                                                            <Link
+                                                                href={route('rewards.edit', reward.id)}
+                                                            >
+                                                                <PrimaryButton>
+                                                                    Edit
+                                                                </PrimaryButton>
+                                                            </Link>
+                                                            <DangerButton
+                                                                onClick={() => deleteReward(reward.id)}
+                                                            >
+                                                                Delete
+                                                            </DangerButton>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

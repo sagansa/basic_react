@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class GradeReward extends Model
 {
+    const STATUSES = ['unpaid', 'paid'];
+
     protected $fillable = [
         'user_id',
         'total_reward_amount',
@@ -14,7 +16,9 @@ class GradeReward extends Model
         'status'
     ];
 
-    const STATUSES = ['paid','unpaid'];
+    protected $attributes = [
+        'status' => 'unpaid' // Set default status
+    ];
 
     public function grade()
     {

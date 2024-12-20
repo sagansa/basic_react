@@ -41,7 +41,6 @@ class HandleInertiaRequests extends Middleware
                     'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
                 ] : null,
             ],
-            // ... other shared data
         ];
     }
 }

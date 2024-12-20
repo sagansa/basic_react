@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, useForm } from '@inertiajs/react';
-import Form from './Form';
+import Form from './UserForm';
 import { useState } from 'react';
 
 export default function Create({ auth, grades, subjects = [] }) {
@@ -82,44 +82,53 @@ export default function Create({ auth, grades, subjects = [] }) {
                 difference: difference,
                 reward_amount: reward_amount,
                 date: grade.date,
-                id: grade.id,
+                id: Date.now(),
                 status: 'verified'
             };
         });
 
-        setSelectedGrades(prev => [...prev, ...validGrades]);
+        if (validGrades.length > 0) {
+            const updatedSelectedGrades = [...selectedGrades, ...validGrades];
+            setSelectedGrades(updatedSelectedGrades);
 
-        // Update data form dengan grades yang baru
-        setData(prev => ({
-            ...prev,
-            grades: [...selectedGrades, ...validGrades],
-            total_reward_amount: validGrades.reduce((total, grade) => total + grade.reward_amount, 0)
-        }));
+            const totalReward = updatedSelectedGrades.reduce((total, grade) =>
+                total + grade.reward_amount, 0
+            );
 
-        // Reset forms
-        setGradeForms([{
-            id: Date.now(),
-            subject_id: '',
-            type: '',
-            grade: '',
-            kkm: '',
-            difference: '',
-            reward_amount: '',
-            date: ''
-        }]);
+            setData(prev => ({
+                ...prev,
+                grades: updatedSelectedGrades,
+                total_reward_amount: totalReward
+            }));
+
+            // Reset form setelah berhasil menambahkan
+            setGradeForms([{
+                id: Date.now(),
+                subject_id: '',
+                type: '',
+                grade: '',
+                kkm: '',
+                difference: '',
+                reward_amount: '',
+                date: ''
+            }]);
+        }
     };
 
-    // Tambahkan fungsi removeGrade
+    // Fungsi removeGrade juga perlu diupdate
     const removeGrade = (gradeId) => {
         const updatedGrades = selectedGrades.filter(g => g.id !== gradeId);
         setSelectedGrades(updatedGrades);
 
-        // Update total reward dan data form
-        const newTotalReward = updatedGrades.reduce((total, grade) => total + grade.reward_amount, 0);
+        // Hitung ulang total reward
+        const totalReward = updatedGrades.reduce((total, grade) =>
+            total + grade.reward_amount, 0
+        );
+
         setData(prev => ({
             ...prev,
             grades: updatedGrades,
-            total_reward_amount: newTotalReward
+            total_reward_amount: totalReward
         }));
     };
 
