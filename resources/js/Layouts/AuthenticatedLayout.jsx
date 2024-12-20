@@ -6,10 +6,18 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+    const { auth } = usePage().props;
+    const user = auth?.user;
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+    console.log('Full Auth Object:', auth);
+    console.log('User Object:', user);
+
+    const roles = user?.roles || [];
+    const permissions = user?.permissions || [];
+
+    const isSuperAdmin = roles.includes('super-admin');
+
+    const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -32,16 +40,59 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </NavLink>
                             </div>
 
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('roles.index')}
-                                    className={`${
-                                        route().current('roles.index') ? 'bg-gray-100' : ''
-                                    } block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100`}
-                                >
-                                    Roles Management
-                                </NavLink>
-                            </div>
+                            {(isSuperAdmin || permissions.includes('view_roles')) && (
+                                <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                    <NavLink
+                                        href={route('roles.index')}
+                                        active={route().current('roles.index')}
+                                    >
+                                        Roles
+                                    </NavLink>
+                                </div>
+                            )}
+
+                            {(isSuperAdmin || permissions.includes('view_permissions')) && (
+                                <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                    <NavLink
+                                        href={route('permissions.index')}
+                                        active={route().current('permissions.index')}
+                                    >
+                                        Permissions
+                                    </NavLink>
+                                </div>
+                            )}
+
+                            {permissions.includes('view_users') && (
+                                <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                    <NavLink
+                                        href={route('users.index')}
+                                        active={route().current('users.index')}
+                                    >
+                                        Users
+                                    </NavLink>
+                                </div>
+                            )}
+
+                            {permissions.includes('view_subjects') && (
+                                <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                    <NavLink
+                                        href={route('subjects.index')}
+                                        active={route().current('subjects.index')}
+                                    >
+                                        Subjects
+                                    </NavLink>
+                                </div>
+                            )}
+
+                            {permissions.includes('view_rewards') && (
+                                <>
+                                    <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                        <NavLink href={route('rewards.index')} active={route().current('rewards.index')}>
+                                            Rewards
+                                        </NavLink>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
@@ -145,6 +196,53 @@ export default function AuthenticatedLayout({ header, children }) {
                         >
                             Dashboard
                         </ResponsiveNavLink>
+
+                        {(isSuperAdmin || permissions.includes('view_roles')) && (
+                            <ResponsiveNavLink
+                                href={route('roles.index')}
+                                active={route().current('roles.index')}
+                            >
+                                Roles
+                            </ResponsiveNavLink>
+                        )}
+
+                        {(isSuperAdmin || permissions.includes('view_permissions')) && (
+                            <ResponsiveNavLink
+                                href={route('permissions.index')}
+                                active={route().current('permissions.index')}
+                            >
+                                Permissions
+                            </ResponsiveNavLink>
+                        )}
+
+                        {permissions.includes('view_users') && (
+                            <ResponsiveNavLink
+                                href={route('users.index')}
+                                active={route().current('users.index')}
+                            >
+                                Users
+                            </ResponsiveNavLink>
+                        )}
+
+                        {permissions.includes('view_subjects') && (
+                            <ResponsiveNavLink
+                                href={route('subjects.index')}
+                                active={route().current('subjects.index')}
+                            >
+                                Subjects
+                            </ResponsiveNavLink>
+                        )}
+
+                        {permissions.includes('view_grades') && (
+                            <>
+                                <ResponsiveNavLink href={route('grades.index')} active={route().current('grades.index')}>
+                                    Grades
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('rewards.index')} active={route().current('rewards.index')}>
+                                    Rewards
+                                </ResponsiveNavLink>
+                            </>
+                        )}
                     </div>
 
                     <div className="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">

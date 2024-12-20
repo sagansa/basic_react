@@ -1,9 +1,14 @@
 <?php
 
+use App\Http\Controllers\GradeController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\RewardSummaryController;
+use App\Http\Controllers\RewardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -21,33 +26,26 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('role_or_permission:publish articles')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
-// Route::middleware(['auth', 'verified'])->group(function () {
-//     Route::get('/roles-permissions', [RolePermissionController::class, 'index'])->name('roles-permissions.index');
-//     Route::post('/roles', [RolePermissionController::class, 'storeRole'])->name('roles.store');
-//     Route::post('/permissions', [RolePermissionController::class, 'storePermission'])->name('permissions.store');
-//     Route::post('/assign-permission', [RolePermissionController::class, 'assignPermission'])->name('permissions.assign');
-//     Route::get('/roles', [RolePermissionController::class, 'index'])->name('roles.index');
-//     Route::post('/roles', [RolePermissionController::class, 'store'])->name('roles.store');
-//     Route::get('/roles/{role}/edit', [RolePermissionController::class, 'edit'])->name('roles.edit');
-//     Route::put('/roles/{role}', [RolePermissionController::class, 'update'])->name('roles.update');
-//     Route::delete('/roles/{role}', [RolePermissionController::class, 'destroy'])->name('roles.destroy');
-// });
-
-// Route::middleware(['auth'])->group(function () {
-//     Route::resource('roles', RoleController::class);
-// });
 
 Route::prefix('/')
     ->middleware(['auth', 'verified'])
     ->group(function () {
         Route::resource('roles', RoleController::class);
         Route::resource('permissions', PermissionController::class);
-        });
+        Route::resource('users', UserController::class);
+        Route::resource('subjects', SubjectController::class);
+        Route::resource('grades', GradeController::class);
+    });
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/rewards', [RewardSummaryController::class, 'index'])->name('rewards.index');
+    Route::resource('rewards', RewardController::class);
+    Route::post('grades/{grade}/rewards', [RewardController::class, 'store'])->name('grades.rewards.store');
+});
 
 require __DIR__.'/auth.php';

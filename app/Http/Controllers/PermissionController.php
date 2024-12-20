@@ -2,122 +2,106 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\View\View;
 use Illuminate\Http\Request;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\Models\Role;
-use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Validation\Rule;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class PermissionController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
-    * Display a listing of the resource.
-    */
-    public function index(Request $request): View
+     * Display a listing of the resource.
+     */
+    public function index()
     {
-        $this->authorize('list', Permission::class);
+        $this->authorize('view_permissions');
 
-        $search = $request->get('search', '');
-        $permissions = Permission::where('name', 'like', "%{$search}%")->paginate(10);
-
-        return view('app.permissions.index')
-            ->with('permissions', $permissions)
-            ->with('search', $search);
+        return Inertia::render('Permission/Index', [
+            'permissions' => Permission::all()
+        ]);
     }
 
     /**
-    * Show the form for creating a new resource.
-    */
-    public function create(): View
+     * Show the form for creating a new resource.
+     */
+    public function create()
     {
-        $this->authorize('create', Permission::class);
+        $this->authorize('create_permissions');
 
-        $roles = Role::all();
-        return view('app.permissions.create')->with('roles', $roles);
+        return Inertia::render('Permission/Create');
     }
 
     /**
-    * Store a newly created resource in storage.
-    */
-    public function store(Request $request): RedirectResponse
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
     {
-        Sanctum::actingAs(request()->user(), [], 'web');
+        $this->authorize('create_permissions');
 
-        $this->authorize('create', Permission::class);
-
-        $data = $this->validate($request, [
-            'name' => 'required|max:64',
-            'roles' => 'array'
+        $validated = $request->validate([
+            'action' => ['required', 'string', Rule::in(['view', 'create', 'edit', 'delete'])],
+            'module' => ['required', 'string', Rule::in(['users', 'roles', 'permissions'])],
+            'name' => ['required', 'string', 'unique:permissions,name']
         ]);
 
-        $permission = Permission::create($data);
-        
-        $roles = Role::find($request->roles);
-        $permission->syncRoles($roles);
-
-        return redirect()
-            ->route('permissions.edit', $permission->id)
-            ->withSuccess(__('crud.common.created'));
-    }
-
-    /**
-    * Display the specified resource.
-    */
-    public function show(Permission $permission): View
-    {
-        $this->authorize('view', Permission::class);
-
-        return view('app.permissions.show')->with('permission', $permission);
-    }
-
-    /**
-    * Show the form for editing the specified resource.
-    */
-    public function edit(Permission $permission): View
-    {
-        $this->authorize('update', $permission);
-
-        $roles = Role::get();
-
-        return view('app.permissions.edit')
-            ->with('permission', $permission)
-            ->with('roles', $roles);
-    }
-
-    /**
-    * Update the specified resource in storage.
-    */
-    public function update(Request $request, Permission $permission): RedirectResponse
-    {
-        $this->authorize('update', $permission);
-
-        $data = $this->validate($request, [
-            'name' => 'required|max:40',
-            'roles' => 'array'
+        Permission::create([
+            'name' => $validated['name'],
+            'guard_name' => 'web'
         ]);
 
-        $permission->update($data);
-        
-        $roles = Role::find($request->roles);
-        $permission->syncRoles($roles);
-
         return redirect()
-            ->route('permissions.edit', $permission->id)
-            ->withSuccess(__('crud.common.saved'));
+            ->route('permissions.index')
+            ->with('message', 'Permission created successfully');
     }
 
     /**
-    * Remove the specified resource from storage.
-    */
-    public function destroy(Permission $permission): RedirectResponse
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Permission $permission)
     {
-        $this->authorize('delete', $permission);
+        $this->authorize('edit_permissions');
+
+        return Inertia::render('Permission/Edit', [
+            'permission' => $permission
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Permission $permission)
+    {
+        $this->authorize('edit_permissions');
+
+        $validated = $request->validate([
+            'action' => ['required', 'string', Rule::in(['view', 'create', 'edit', 'delete'])],
+            'module' => ['required', 'string', Rule::in(['users', 'roles', 'permissions'])],
+            'name' => ['required', 'string', Rule::unique('permissions')->ignore($permission->id)]
+        ]);
+
+        $permission->update([
+            'name' => $validated['name']
+        ]);
+
+        return redirect()
+            ->route('permissions.index')
+            ->with('message', 'Permission updated successfully');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Permission $permission)
+    {
+        $this->authorize('delete_permissions');
 
         $permission->delete();
 
         return redirect()
             ->route('permissions.index')
-            ->withSuccess(__('crud.common.removed'));
+            ->with('message', 'Permission deleted successfully');
     }
 }

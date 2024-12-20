@@ -1,97 +1,116 @@
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, Link } from '@inertiajs/react';
+import DangerButton from '@/Components/DangerButton';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
+import TextInput from '@/Components/TextInput';
+import InputLabel from '@/Components/InputLabel';
+import { router } from '@inertiajs/react';
 import React, { useState } from 'react';
-import { usePage } from '@inertiajs/inertia-react';
-import { Link } from '@inertiajs/inertia-react';
 
-function Roles() {
-  const { roles } = usePage().props; // Mengambil data roles dari props
-  const [search, setSearch] = useState('');
+export default function Roles({ auth, roles }) {
+    const [search, setSearch] = useState('');
 
-  const handleSearch = (e) => {
-    setSearch(e.target.value);
-  };
+    const handleSearch = (e) => {
+        setSearch(e.target.value);
+    };
 
-  const filteredRoles = Array.isArray(roles) ? roles.filter(role => role.name.includes(search)) : [];
+    const filteredRoles = roles.filter(role =>
+        role.name.toLowerCase().includes(search.toLowerCase())
+    );
 
-  return (
-    <div>
-      <h2>Roles</h2>
-      <p>Daftar peran</p>
-      <div className="mt-4 mb-5">
-        <div className="flex flex-wrap justify-between mt-1">
-          <div className="mt-1 md:w-1/3">
-            <form>
-              <div className="flex items-center w-full">
-                <input
-                  type="text"
-                  name="search"
-                  value={search}
-                  onChange={handleSearch}
-                  placeholder="Cari"
-                  autoComplete="off"
-                  className="p-2 rounded border"
-                />
-                <div className="ml-1">
-                  <button type="submit" className="p-2 text-white bg-blue-500 rounded">
-                    <i className="icon ion-md-search"></i>
-                  </button>
+    const deleteRole = (id) => {
+        if (confirm('Are you sure you want to delete this role?')) {
+            router.delete(route('roles.destroy', id));
+        }
+    };
+
+    return (
+        <AuthenticatedLayout
+            user={auth.user}
+            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Roles</h2>}
+        >
+            <Head title="Roles" />
+
+            <div className="py-12">
+                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                    <div className="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
+                        <div className="p-6 text-gray-900 dark:text-gray-100">
+                            <div className="flex justify-between mb-6">
+                                <div className="flex items-center w-1/3">
+                                    <TextInput
+                                        type="text"
+                                        name="search"
+                                        value={search}
+                                        onChange={handleSearch}
+                                        placeholder="Search roles..."
+                                        className="block w-full dark:bg-gray-900 dark:text-gray-100"
+                                    />
+                                </div>
+
+                                <Link href={route('roles.create')}>
+                                    <PrimaryButton>
+                                        <span className="mr-2">+</span>
+                                        Create Role
+                                    </PrimaryButton>
+                                </Link>
+                            </div>
+
+                            <div className="overflow-x-auto bg-white rounded shadow dark:bg-gray-800">
+                                <table className="w-full whitespace-nowrap">
+                                    <thead>
+                                        <tr className="font-bold text-left bg-gray-50 dark:bg-gray-700">
+                                            <th className="px-6 pt-5 pb-4 dark:text-gray-200">Name</th>
+                                            <th className="px-6 pt-5 pb-4 dark:text-gray-200">Guard Name</th>
+                                            <th className="px-6 pt-5 pb-4 dark:text-gray-200">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredRoles.map((role) => (
+                                            <tr
+                                                key={role.id}
+                                                className="hover:bg-gray-50 focus-within:bg-gray-50 dark:hover:bg-gray-700 dark:focus-within:bg-gray-700"
+                                            >
+                                                <td className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 dark:text-gray-200">
+                                                    {role.name}
+                                                </td>
+                                                <td className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 dark:text-gray-200">
+                                                    {role.guard_name}
+                                                </td>
+                                                <td className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                                                    <div className="flex items-center gap-4">
+                                                        <Link href={route('roles.edit', role.id)}>
+                                                            <SecondaryButton>
+                                                                Edit
+                                                            </SecondaryButton>
+                                                        </Link>
+
+                                                        <DangerButton
+                                                            onClick={() => deleteRole(role.id)}
+                                                        >
+                                                            Delete
+                                                        </DangerButton>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {filteredRoles.length === 0 && (
+                                            <tr>
+                                                <td
+                                                    className="px-6 py-4 text-center border-t border-gray-200 dark:border-gray-700 dark:text-gray-400"
+                                                    colSpan="2"
+                                                >
+                                                    No roles found.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </form>
-          </div>
-          <div className="mt-1 text-right md:w-1/3">
-            <Link href="/roles/create">
-              <button className="p-2 text-white bg-green-500 rounded">
-                <i className="mr-1 icon ion-md-add"></i>
-                Buat
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
-      <table className="min-w-full border">
-        <thead>
-          <tr>
-            <th className="border">Nama</th>
-            <th className="border"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredRoles.map(role => (
-            <tr key={role.id}>
-              <td className="border">{role.name}</td>
-              <td className="border">
-                <div>
-                  {role.status !== '2' ? (
-                    <Link href={`/roles/${role.id}/edit`}>
-                      <button className="p-2 text-white bg-yellow-500 rounded">
-                        <i className="icon ion-md-create"></i>
-                      </button>
-                    </Link>
-                  ) : (
-                    <Link href={`/roles/${role.id}`}>
-                      <button className="p-2 text-white bg-blue-500 rounded">
-                        <i className="icon ion-md-eye"></i>
-                      </button>
-                    </Link>
-                  )}
-                  <form action={`/roles/${role.id}`} method="POST" style={{ display: 'inline' }}>
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" className="p-2 text-white bg-red-500 rounded">
-                      <i className="icon ion-md-trash"></i>
-                    </button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="px-4 mt-10">
-        {/* pagination */}
-      </div>
-    </div>
-  );
+            </div>
+        </AuthenticatedLayout>
+    );
 }
-
-export default Roles;

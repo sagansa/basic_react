@@ -2,24 +2,26 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import Form from './Form';
 
-export default function Create({ auth }) {
-    const { data, setData, post, processing, errors } = useForm({
-        action: '',
-        module: '',
-        name: '',
+export default function Edit({ auth, subject }) {
+    const [action, module] = subject.name.split('_');
+
+    const { data, setData, patch, processing, errors } = useForm({
+        action: action,
+        module: module,
+        name: subject.name,
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('permissions.store'));
+        patch(route('subjects.update', subject.id));
     };
 
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Permission</h2>}
+            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Edit Subject</h2>}
         >
-            <Head title="Create Permission" />
+            <Head title="Edit Subject" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
