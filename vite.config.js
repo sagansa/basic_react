@@ -15,4 +15,9 @@ export default defineConfig({
             '@': '/resources/js',
         },
     },
+    build: {
+           rollupOptions: {
+               external: ['@headlessui/react'],
+           },
+       },
 });
