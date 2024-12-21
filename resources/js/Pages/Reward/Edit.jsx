@@ -4,9 +4,6 @@ import AdminForm from './AdminForm';
 import UserForm from './UserForm';
 
 export default function Edit({ auth, reward, subjects }) {
-    console.log('Reward data:', reward);
-    console.log('Auth data:', auth);
-    console.log('User roles:', auth.user.roles);
 
     const { data, setData, put, processing, errors } = useForm({
         id: reward.id,
@@ -19,11 +16,9 @@ export default function Edit({ auth, reward, subjects }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Submitting data:', data);
         put(route('rewards.update', reward.id), {
             preserveScroll: true,
             onSuccess: () => {
-                console.log('Update successful');
             },
             onError: (errors) => {
                 console.error('Update failed:', errors);
@@ -57,10 +52,6 @@ export default function Edit({ auth, reward, subjects }) {
             );
         }
     };
-
-    console.log('Is admin:', isAdmin);
-    console.log('Reward status:', reward.status);
-    console.log('Current form data:', data);
 
     return (
         <AuthenticatedLayout

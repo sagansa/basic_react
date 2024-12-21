@@ -7,19 +7,18 @@ import SelectInput from '@/Components/SelectInput';
 export default function AdminForm({ data, setData, errors, processing, submit }) {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        console.log(`Changing ${name} to:`, value);
         setData(name, value);
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-6 text-gray-900 dark:text-gray-100">Update Reward</h2>
+        <div className="p-6 bg-white rounded-lg shadow-sm dark:bg-gray-800">
+            <h2 className="mb-6 text-lg font-semibold text-gray-900 dark:text-gray-100">Update Reward</h2>
 
             <form onSubmit={submit} className="space-y-6">
                 {/* User Info (Read Only) */}
                 <div>
                     <InputLabel value="User" />
-                    <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-700 dark:text-gray-300">
+                    <div className="p-2 mt-1 text-gray-700 bg-gray-100 rounded-md dark:bg-gray-700 dark:text-gray-300">
                         {data.user?.name}
                     </div>
                 </div>
@@ -29,8 +28,8 @@ export default function AdminForm({ data, setData, errors, processing, submit })
                     <InputLabel value="Grades" />
                     <div className="mt-2 space-y-2">
                         {data.grades?.map(grade => (
-                            <div key={grade.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-                                <div className="flex justify-between items-center">
+                            <div key={grade.id} className="p-3 rounded-md bg-gray-50 dark:bg-gray-700">
+                                <div className="flex items-center justify-between">
                                     <div>
                                         <p className="font-medium text-gray-900 dark:text-gray-100">
                                             {grade.subject?.name}
@@ -57,7 +56,7 @@ export default function AdminForm({ data, setData, errors, processing, submit })
                 {/* Total Reward Amount (Read Only) */}
                 <div>
                     <InputLabel value="Total Reward Amount" />
-                    <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-700 dark:text-gray-300">
+                    <div className="p-2 mt-1 text-gray-700 bg-gray-100 rounded-md dark:bg-gray-700 dark:text-gray-300">
                         {new Intl.NumberFormat('id-ID', {
                             style: 'currency',
                             currency: 'IDR'

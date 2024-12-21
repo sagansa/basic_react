@@ -66,7 +66,7 @@ export default function Index({ auth, subjects }) {
                                     <tbody>
                                         {subjects.map((subject) => (
                                             <tr key={subject.id} className="hover:bg-gray-50 focus-within:bg-gray-50 dark:hover:bg-gray-700 dark:focus-within:bg-gray-700">
-                                                <td className="px-6 py-4">{subject.name}</td>
+                                                <td className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">{subject.name}</td>
                                                 <td className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                                                     <div className="flex items-center gap-4">
                                                         <Link href={route('subjects.edit', subject.id)}>

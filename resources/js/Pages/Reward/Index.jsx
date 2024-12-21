@@ -48,7 +48,7 @@ export default function Index({ auth, summary, rewards }) {
                     </div>
 
                     {/* Rewards Table */}
-                    <div className="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
+                    <div className="overflow-x-auto bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             {!isAdmin && (
                                 <div className="flex justify-between mb-6">

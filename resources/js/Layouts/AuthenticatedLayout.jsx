@@ -9,9 +9,6 @@ export default function AuthenticatedLayout({ header, children }) {
     const { auth } = usePage().props;
     const user = auth?.user;
 
-    console.log('Full Auth Object:', auth);
-    console.log('User Object:', user);
-
     const roles = user?.roles || [];
     const permissions = user?.permissions || [];
 

@@ -82,7 +82,7 @@ export default function UserForm({ data, setData, errors, processing, submit, su
         <form onSubmit={submit} className="space-y-6">
             <div className="space-y-4">
                 {data.grades.map((grade, index) => (
-                    <div key={grade.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div key={grade.id} className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {/* Subject */}
                             <div>
@@ -91,7 +91,7 @@ export default function UserForm({ data, setData, errors, processing, submit, su
                                     id={`subject_${index}`}
                                     value={grade.subject_id}
                                     onChange={(e) => handleGradeChange(index, 'subject_id', e.target.value)}
-                                    className="mt-1 block w-full"
+                                    className="block w-full mt-1"
                                 >
                                     <option value="">Select Subject</option>
                                     {subjects.map(subject => (
@@ -110,7 +110,7 @@ export default function UserForm({ data, setData, errors, processing, submit, su
                                     id={`type_${index}`}
                                     value={grade.type}
                                     onChange={(e) => handleGradeChange(index, 'type', e.target.value)}
-                                    className="mt-1 block w-full"
+                                    className="block w-full mt-1"
                                 >
                                     <option value="">Select Type</option>
                                     <option value="Quiz">Quiz</option>
@@ -129,7 +129,7 @@ export default function UserForm({ data, setData, errors, processing, submit, su
                                     type="number"
                                     value={grade.grade}
                                     onChange={(e) => handleGradeChange(index, 'grade', e.target.value)}
-                                    className="mt-1 block w-full"
+                                    className="block w-full mt-1"
                                 />
                                 <InputError message={errors[`grades.${index}.grade`]} className="mt-2" />
                             </div>
@@ -142,7 +142,7 @@ export default function UserForm({ data, setData, errors, processing, submit, su
                                     type="number"
                                     value={grade.kkm}
                                     onChange={(e) => handleGradeChange(index, 'kkm', e.target.value)}
-                                    className="mt-1 block w-full"
+                                    className="block w-full mt-1"
                                 />
                                 <InputError message={errors[`grades.${index}.kkm`]} className="mt-2" />
                             </div>
@@ -154,7 +154,7 @@ export default function UserForm({ data, setData, errors, processing, submit, su
                                     id={`difference_${index}`}
                                     type="number"
                                     value={grade.difference}
-                                    className="mt-1 block w-full bg-gray-100"
+                                    className="block w-full mt-1 bg-gray-100"
                                     readOnly
                                 />
                             </div>
@@ -162,7 +162,7 @@ export default function UserForm({ data, setData, errors, processing, submit, su
                             {/* Reward Amount (Read Only) */}
                             <div>
                                 <InputLabel htmlFor={`reward_${index}`} value="Reward Amount" />
-                                <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-700 dark:text-gray-300">
+                                <div className="p-2 mt-1 text-gray-700 bg-gray-100 rounded-md dark:bg-gray-700 dark:text-gray-300">
                                     {formatCurrency(grade.reward_amount)}
                                 </div>
                             </div>
@@ -175,7 +175,7 @@ export default function UserForm({ data, setData, errors, processing, submit, su
                                     type="date"
                                     value={grade.date}
                                     onChange={(e) => handleGradeChange(index, 'date', e.target.value)}
-                                    className="mt-1 block w-full"
+                                    className="block w-full mt-1"
                                 />
                                 <InputError message={errors[`grades.${index}.date`]} className="mt-2" />
                             </div>
@@ -197,7 +197,7 @@ export default function UserForm({ data, setData, errors, processing, submit, su
             {/* Total Reward Amount (Read Only) */}
             <div>
                 <InputLabel value="Total Reward Amount" />
-                <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-700 dark:text-gray-300">
+                <div className="p-2 mt-1 text-gray-700 bg-gray-100 rounded-md dark:bg-gray-700 dark:text-gray-300">
                     {formatCurrency(data.total_reward_amount)}
                 </div>
             </div>
