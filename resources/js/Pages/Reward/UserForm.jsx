@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -6,6 +7,15 @@ import SelectInput from '@/Components/SelectInput';
 import DangerButton from '@/Components/DangerButton';
 
 export default function UserForm({ data, setData, errors, processing, submit, subjects }) {
+    // Separate state for input form
+    const [formInput, setFormInput] = useState({
+        subject_id: '',
+        type: '',
+        grade: '',
+        kkm: '',
+        date: '',
+    });
+
     const calculateDifference = (grade, kkm) => {
         if (!grade || !kkm) return '';
         return Math.max(0, parseInt(grade) - parseInt(kkm));
@@ -37,32 +47,56 @@ export default function UserForm({ data, setData, errors, processing, submit, su
 
         setData('grades', updatedGrades);
 
-        // Update total reward amount
         const totalReward = updatedGrades.reduce((sum, grade) =>
             sum + (grade.reward_amount || 0), 0
         );
         setData('total_reward_amount', totalReward);
     };
 
+    const handleInputChange = (field, value) => {
+        setFormInput(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
     const addGrade = () => {
+        if (!formInput.subject_id || !formInput.type || !formInput.grade || !formInput.kkm || !formInput.date) {
+            return;
+        }
+
+        const difference = calculateDifference(formInput.grade, formInput.kkm);
+        const reward_amount = difference !== '' ? calculateRewardAmount(formInput.grade, difference) : '';
+
         const newGrade = {
             id: Date.now(),
+            ...formInput,
+            difference,
+            reward_amount,
+            created_at: new Date().toISOString()
+        };
+
+        const updatedGrades = [...data.grades, newGrade];
+        setData(prevData => ({
+            ...prevData,
+            grades: updatedGrades,
+            total_reward_amount: updatedGrades.reduce((sum, grade) => sum + (grade.reward_amount || 0), 0)
+        }));
+
+        // Reset form
+        setFormInput({
             subject_id: '',
             type: '',
             grade: '',
             kkm: '',
-            difference: '',
-            reward_amount: '',
             date: ''
-        };
-        setData('grades', [...data.grades, newGrade]);
+        });
     };
 
     const removeGrade = (index) => {
         const updatedGrades = data.grades.filter((_, i) => i !== index);
         setData('grades', updatedGrades);
 
-        // Update total reward amount
         const totalReward = updatedGrades.reduce((sum, grade) =>
             sum + (grade.reward_amount || 0), 0
         );
@@ -79,141 +113,168 @@ export default function UserForm({ data, setData, errors, processing, submit, su
     };
 
     return (
-        <form onSubmit={submit} className="space-y-6">
-            <div className="space-y-4">
-                {data.grades.map((grade, index) => (
-                    <div key={grade.id} className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <form onSubmit={submit} className="container mx-auto">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                {/* Left Column - Grade Input Form */}
+                <div className="space-y-4 lg:col-span-2">
+                    <div className="p-6 bg-white rounded-lg shadow dark:bg-gray-800">
+                        <h2 className="mb-4 text-xl font-semibold">Tambah Nilai Baru</h2>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             {/* Subject */}
-                            <div>
-                                <InputLabel htmlFor={`subject_${index}`} value="Subject" />
+                            <div className="md:col-span-2">
+                                <InputLabel htmlFor="subject" value="Mata Pelajaran" />
                                 <SelectInput
-                                    id={`subject_${index}`}
-                                    value={grade.subject_id}
-                                    onChange={(e) => handleGradeChange(index, 'subject_id', e.target.value)}
-                                    className="block w-full mt-1"
+                                    id="subject"
+                                    value={formInput.subject_id}
+                                    onChange={(e) => handleInputChange('subject_id', e.target.value)}
+                                    className="mt-1 w-full"
                                 >
-                                    <option value="">Select Subject</option>
+                                    <option value="">Pilih Mata Pelajaran</option>
                                     {subjects.map(subject => (
                                         <option key={subject.id} value={subject.id}>
                                             {subject.name}
                                         </option>
                                     ))}
                                 </SelectInput>
-                                <InputError message={errors[`grades.${index}.subject_id`]} className="mt-2" />
+                                <InputError message={errors['subject_id']} className="mt-2" />
                             </div>
 
                             {/* Type */}
                             <div>
-                                <InputLabel htmlFor={`type_${index}`} value="Type" />
+                                <InputLabel htmlFor="type" value="Tipe" />
                                 <SelectInput
-                                    id={`type_${index}`}
-                                    value={grade.type}
-                                    onChange={(e) => handleGradeChange(index, 'type', e.target.value)}
-                                    className="block w-full mt-1"
+                                    id="type"
+                                    value={formInput.type}
+                                    onChange={(e) => handleInputChange('type', e.target.value)}
+                                    className="mt-1 w-full"
                                 >
-                                    <option value="">Select Type</option>
-                                    <option value="Quiz">Quiz</option>
-                                    <option value="Assignment">Assignment</option>
-                                    <option value="Mid Test">Mid Test</option>
-                                    <option value="Final Test">Final Test</option>
+                                    <option value="">Pilih Tipe</option>
+                                    <option value="quiz">Kuis</option>
+                                    <option value="assignment">Tugas</option>
+                                    <option value="exam">Ujian</option>
+                                    <option value="other">Lainnya</option>
                                 </SelectInput>
-                                <InputError message={errors[`grades.${index}.type`]} className="mt-2" />
+                                <InputError message={errors['type']} className="mt-2" />
                             </div>
 
                             {/* Grade */}
                             <div>
-                                <InputLabel htmlFor={`grade_${index}`} value="Grade" />
+                                <InputLabel htmlFor="grade" value="Nilai" />
                                 <TextInput
-                                    id={`grade_${index}`}
+                                    id="grade"
                                     type="number"
-                                    value={grade.grade}
-                                    onChange={(e) => handleGradeChange(index, 'grade', e.target.value)}
-                                    className="block w-full mt-1"
+                                    value={formInput.grade}
+                                    onChange={(e) => handleInputChange('grade', e.target.value)}
+                                    className="mt-1 w-full"
                                 />
-                                <InputError message={errors[`grades.${index}.grade`]} className="mt-2" />
+                                <InputError message={errors['grade']} className="mt-2" />
                             </div>
 
                             {/* KKM */}
                             <div>
-                                <InputLabel htmlFor={`kkm_${index}`} value="KKM" />
+                                <InputLabel htmlFor="kkm" value="KKM" />
                                 <TextInput
-                                    id={`kkm_${index}`}
+                                    id="kkm"
                                     type="number"
-                                    value={grade.kkm}
-                                    onChange={(e) => handleGradeChange(index, 'kkm', e.target.value)}
-                                    className="block w-full mt-1"
+                                    value={formInput.kkm}
+                                    onChange={(e) => handleInputChange('kkm', e.target.value)}
+                                    className="mt-1 w-full"
                                 />
-                                <InputError message={errors[`grades.${index}.kkm`]} className="mt-2" />
-                            </div>
-
-                            {/* Difference (Read Only) */}
-                            <div>
-                                <InputLabel htmlFor={`difference_${index}`} value="Difference" />
-                                <TextInput
-                                    id={`difference_${index}`}
-                                    type="number"
-                                    value={grade.difference}
-                                    className="block w-full mt-1 bg-gray-100"
-                                    readOnly
-                                />
-                            </div>
-
-                            {/* Reward Amount (Read Only) */}
-                            <div>
-                                <InputLabel htmlFor={`reward_${index}`} value="Reward Amount" />
-                                <div className="p-2 mt-1 text-gray-700 bg-gray-100 rounded-md dark:bg-gray-700 dark:text-gray-300">
-                                    {formatCurrency(grade.reward_amount)}
-                                </div>
+                                <InputError message={errors['kkm']} className="mt-2" />
                             </div>
 
                             {/* Date */}
                             <div>
-                                <InputLabel htmlFor={`date_${index}`} value="Date" />
+                                <InputLabel htmlFor="date" value="Tanggal" />
                                 <TextInput
-                                    id={`date_${index}`}
+                                    id="date"
                                     type="date"
-                                    value={grade.date}
-                                    onChange={(e) => handleGradeChange(index, 'date', e.target.value)}
-                                    className="block w-full mt-1"
+                                    value={formInput.date}
+                                    onChange={(e) => handleInputChange('date', e.target.value)}
+                                    className="mt-1 w-full"
                                 />
-                                <InputError message={errors[`grades.${index}.date`]} className="mt-2" />
+                                <InputError message={errors['date']} className="mt-2" />
                             </div>
 
-                            {/* Remove Button */}
-                            <div className="flex items-center mt-4">
-                                <DangerButton
+                            {/* Add Grade Button */}
+                            <div className="md:col-span-2">
+                                <PrimaryButton
                                     type="button"
-                                    onClick={() => removeGrade(index)}
+                                    onClick={addGrade}
+                                    className="w-full"
+                                    disabled={!formInput.subject_id || !formInput.type || !formInput.grade || !formInput.kkm || !formInput.date}
                                 >
-                                    Remove
-                                </DangerButton>
+                                    Tambah Nilai
+                                </PrimaryButton>
                             </div>
                         </div>
                     </div>
-                ))}
-            </div>
-
-            {/* Total Reward Amount (Read Only) */}
-            <div>
-                <InputLabel value="Total Reward Amount" />
-                <div className="p-2 mt-1 text-gray-700 bg-gray-100 rounded-md dark:bg-gray-700 dark:text-gray-300">
-                    {formatCurrency(data.total_reward_amount)}
                 </div>
-            </div>
 
-            <div className="flex justify-between">
-                <PrimaryButton
-                    type="button"
-                    onClick={addGrade}
-                >
-                    Add Grade
-                </PrimaryButton>
+                {/* Right Column - Reward Summary */}
+                <div className="lg:col-span-1">
+                    <div className="sticky top-4 p-6 bg-white rounded-lg shadow dark:bg-gray-800">
+                        <h2 className="mb-4 text-xl font-semibold">Ringkasan Reward</h2>
+                        <div className="space-y-4">
+                            {data.grades.map((grade, index) => (
+                                <div key={grade.id} className="p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex-grow">
+                                            <div className="flex justify-between items-center">
+                                                <h3 className="font-medium text-gray-900 dark:text-white">
+                                                    {subjects.find(s => s.id === parseInt(grade.subject_id))?.name || 'Mata Pelajaran'}
+                                                </h3>
+                                                <DangerButton
+                                                    type="button"
+                                                    onClick={() => removeGrade(index)}
+                                                    className="px-2 py-1"
+                                                >
+                                                    Hapus
+                                                </DangerButton>
+                                            </div>
+                                            <div className="mt-2 space-y-1">
+                                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                                    <div className="font-medium capitalize">{grade.type}</div>
+                                                    <div className="text-right font-medium">{new Date(grade.date).toLocaleDateString()}</div>
 
-                <div className="flex gap-2">
-                    <PrimaryButton disabled={processing}>
-                        {processing ? 'Saving...' : 'Save Reward'}
-                    </PrimaryButton>
+                                                    <div className="font-medium">Nilai: {grade.grade}</div>
+                                                    <div className="text-right font-medium">KKM: {grade.kkm}</div>
+
+                                                    <div className="col-span-2 text-right font-medium text-green-600 dark:text-green-400">
+                                                        +{grade.difference} poin = {formatCurrency(grade.reward_amount)}
+                                                    </div>
+                                                </div>
+                                                <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-600">
+                                                    <div className="flex justify-between">
+                                                        <span className="text-gray-600 dark:text-gray-400">Total:</span>
+                                                        <span className="font-medium text-green-600 dark:text-green-400">
+                                                            {formatCurrency(grade.reward_amount)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            <div className="pt-4 mt-4 border-t">
+                                <div className="flex justify-between items-center font-semibold">
+                                    <span>Total Reward:</span>
+                                    <span className="text-lg text-green-600 dark:text-green-400">
+                                        {formatCurrency(data.total_reward_amount)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <PrimaryButton
+                                className="mt-4 w-full"
+                                disabled={processing || data.grades.length === 0}
+                            >
+                                {processing ? 'Menyimpan...' : 'Simpan Reward'}
+                            </PrimaryButton>
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>

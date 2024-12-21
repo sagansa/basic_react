@@ -6,19 +6,21 @@ use App\Models\Grade;
 use App\Models\GradeReward;
 use App\Models\Subject;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class RewardController extends Controller
 {
     public function index()
     {
-        $isAdmin = auth()->user()->hasRole(['admin', 'super-admin']);
+        $isAdmin = Auth::user()->hasRole(['admin', 'super-admin']);
 
         $rewardsQuery = GradeReward::with(['grade.subject', 'user']);
 
         // Jika bukan admin, filter berdasarkan user_id
         if (!$isAdmin) {
-            $rewardsQuery->where('user_id', auth()->user()->id);
+            $rewardsQuery->where('user_id', Auth::id());
         }
 
         $rewards = $rewardsQuery->latest()->get();
@@ -32,9 +34,9 @@ class RewardController extends Controller
             ];
         } else {
             $summary = [
-                'total_reward_amount' => GradeReward::where('user_id', auth()->user()->id)
+                'total_reward_amount' => GradeReward::where('user_id', Auth::id())
                     ->sum('total_reward_amount'),
-                'total_payment' => GradeReward::where('user_id', auth()->user()->id)
+                'total_payment' => GradeReward::where('user_id', Auth::id())
                     ->where('status', 'paid')
                     ->sum('total_payment'),
             ];
@@ -47,137 +49,139 @@ class RewardController extends Controller
         ]);
     }
 
+    public function create()
+    {
+        // Pastikan hanya user yang bisa mengakses
+        if (!Auth::user()->hasRole('user')) {
+            return redirect()->route('rewards.index')
+                ->with('error', 'Hanya user yang dapat membuat reward.');
+        }
+
+        $subjects = Subject::orderBy('name')->get();
+
+        return Inertia::render('Reward/Create', [
+            'subjects' => $subjects
+        ]);
+    }
+
     public function store(Request $request)
     {
         // Pastikan hanya user yang bisa store
-        if (!auth()->user()->hasRole('user')) {
-            abort(403, 'Only users can create rewards.');
+        if (!Auth::user()->hasRole('user')) {
+            abort(403, 'Hanya user yang dapat membuat reward.');
         }
 
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'grades' => 'required|array|min:1',
-            'grades.*.subject_id' => 'required|exists:subjects,id',
-            'grades.*.type' => 'required|in:' . implode(',', Grade::TYPES),
-            'grades.*.grade' => 'required|numeric|min:0|max:100',
-            'grades.*.kkm' => 'required|numeric|min:0|max:100',
-            'grades.*.difference' => 'required|numeric|min:0',
-            'grades.*.reward_amount' => 'required|numeric|min:0',
-            'grades.*.date' => 'required|date',
-            'total_reward_amount' => 'required|numeric|min:0',
-            'status' => 'required|in:' . implode(',', GradeReward::STATUSES),
-        ]);
-
-        // Pastikan user hanya bisa membuat reward untuk dirinya sendiri
-        if ($validated['user_id'] !== auth()->id()) {
-            abort(403, 'You can only create rewards for yourself.');
-        }
-
-        // Hitung total reward dari semua grade
-        $totalReward = collect($validated['grades'])->sum('reward_amount');
-
-        // Buat reward dengan total yang benar
-        $reward = GradeReward::create([
-            'user_id' => $validated['user_id'],
-            'total_reward_amount' => $totalReward,
-            'total_payment' => 0, // Set default 0
-            'status' => $validated['status'],
-        ]);
-
-        // Buat grade-grade yang terkait
-        foreach ($validated['grades'] as $gradeData) {
-            Grade::create([
-                'subject_id' => $gradeData['subject_id'],
-                'type' => $gradeData['type'],
-                'grade' => $gradeData['grade'],
-                'kkm' => $gradeData['kkm'],
-                'difference' => $gradeData['difference'],
-                'reward_amount' => $gradeData['reward_amount'],
-                'date' => $gradeData['date'],
-                'user_id' => $validated['user_id'],
-                'status' => 'verified',
-                'grade_reward_id' => $reward->id
+        try {
+            $validated = $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'grades' => 'required|array|min:1',
+                'grades.*.subject_id' => 'required|exists:subjects,id',
+                'grades.*.type' => 'required|in:quiz,assignment,exam,other',
+                'grades.*.grade' => 'required|numeric|min:0|max:100',
+                'grades.*.kkm' => 'required|numeric|min:0|max:100',
+                'grades.*.difference' => 'required|numeric|min:0',
+                'grades.*.reward_amount' => 'required|numeric|min:0',
+                'grades.*.date' => 'required|date',
+                'total_reward_amount' => 'required|numeric|min:0',
+                'status' => 'required|in:unpaid,paid,cancelled',
             ]);
-        }
 
-        return redirect()->route('rewards.index')
-            ->with('message', 'Reward created successfully.');
+            // Pastikan user hanya bisa membuat reward untuk dirinya sendiri
+            if ($validated['user_id'] !== Auth::id()) {
+                throw new \Exception('Anda hanya dapat membuat reward untuk diri sendiri.');
+            }
+
+            DB::beginTransaction();
+
+            // Buat reward
+            $reward = GradeReward::create([
+                'user_id' => $validated['user_id'],
+                'total_reward_amount' => $validated['total_reward_amount'],
+                'total_payment' => 0,
+                'status' => $validated['status'],
+            ]);
+
+            // Buat grade-grade yang terkait
+            foreach ($validated['grades'] as $gradeData) {
+                Grade::create([
+                    'subject_id' => $gradeData['subject_id'],
+                    'type' => $gradeData['type'],
+                    'grade' => $gradeData['grade'],
+                    'kkm' => $gradeData['kkm'],
+                    'difference' => $gradeData['difference'],
+                    'reward_amount' => $gradeData['reward_amount'],
+                    'date' => $gradeData['date'],
+                    'user_id' => $validated['user_id'],
+                    'status' => 'verified',
+                    'grade_reward_id' => $reward->id
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('rewards.index')
+                ->with('message', 'Reward berhasil dibuat.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withErrors(['error' => $e->getMessage()])
+                ->withInput();
+        }
     }
 
     public function update(Request $request, GradeReward $reward)
     {
-        $isAdmin = auth()->user()->hasRole('admin');
+        $isAdmin = Auth::user()->hasRole('admin');
 
         // Jika bukan admin, pastikan hanya bisa update reward miliknya
-        if (!$isAdmin && $reward->user_id !== auth()->id()) {
-            abort(403, 'You can only update your own rewards.');
+        if (!$isAdmin && $reward->user_id !== Auth::id()) {
+            abort(403, 'Anda hanya dapat mengupdate reward milik Anda sendiri.');
         }
 
         // Validasi yang sama untuk admin dan user
         $validated = $request->validate([
             'total_payment' => 'required|numeric|min:0',
-            'status' => 'required|in:' . implode(',', GradeReward::STATUSES),
+            'status' => 'required|in:unpaid,paid,cancelled',
         ]);
 
         $reward->update($validated);
 
         return redirect()->route('rewards.index')
-            ->with('message', 'Reward updated successfully.');
+            ->with('message', 'Reward berhasil diupdate.');
     }
 
     public function destroy(GradeReward $reward)
     {
-        $isAdmin = auth()->user()->hasRole(['admin', 'super-admin']);
+        $isAdmin = Auth::user()->hasRole(['admin', 'super-admin']);
 
         // Jika bukan admin dan status paid, tolak akses
         if (!$isAdmin && $reward->status === 'paid') {
-            abort(403, 'Cannot delete reward that has been paid.');
+            abort(403, 'Tidak dapat menghapus reward yang sudah dibayar.');
         }
 
         // Jika bukan admin dan bukan pemilik reward, tolak akses
-        if (!$isAdmin && $reward->user_id !== auth()->id()) {
-            abort(403, 'You can only delete your own rewards.');
+        if (!$isAdmin && $reward->user_id !== Auth::id()) {
+            abort(403, 'Anda hanya dapat menghapus reward milik Anda sendiri.');
         }
 
         $reward->delete();
         return redirect()->route('rewards.index')
-            ->with('message', 'Reward deleted successfully.');
-    }
-
-    public function create()
-    {
-        // Pastikan hanya user yang bisa mengakses
-        if (!auth()->user()->hasRole('user')) {
-            return redirect()->route('rewards.index')
-                ->with('message', 'Only users can create rewards.');
-        }
-
-        $grades = Grade::where('user_id', auth()->id())
-            ->where('status', 'verified')
-            ->whereDoesntHave('rewards')
-            ->with('subject')
-            ->get();
-
-        $subjects = Subject::orderBy('name')->get();
-
-        return Inertia::render('Reward/Create', [
-            'grades' => $grades,
-            'subjects' => $subjects
-        ]);
+            ->with('message', 'Reward berhasil dihapus.');
     }
 
     public function edit(GradeReward $reward)
     {
-        $isAdmin = auth()->user()->hasRole(['admin', 'super-admin']);
+        $isAdmin = Auth::user()->hasRole(['admin', 'super-admin']);
 
         // Jika bukan admin dan status paid, tolak akses
         if (!$isAdmin && $reward->status === 'paid') {
-            abort(403, 'Cannot edit reward that has been paid.');
+            abort(403, 'Tidak dapat mengedit reward yang sudah dibayar.');
         }
 
         // Jika bukan admin dan bukan pemilik reward, tolak akses
-        if (!$isAdmin && $reward->user_id !== auth()->id()) {
-            abort(403, 'You can only edit your own rewards.');
+        if (!$isAdmin && $reward->user_id !== Auth::id()) {
+            abort(403, 'Anda hanya dapat mengedit reward milik Anda sendiri.');
         }
 
         return Inertia::render('Reward/Edit', [

@@ -78,7 +78,7 @@ export default function Roles({ auth, roles }) {
                                                     {role.guard_name}
                                                 </td>
                                                 <td className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                                                    <div className="flex items-center gap-4">
+                                                    <div className="flex gap-4 items-center">
                                                         <Link href={route('roles.edit', role.id)}>
                                                             <SecondaryButton>
                                                                 Edit

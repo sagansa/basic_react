@@ -1,10 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, useForm } from '@inertiajs/react';
-import Form from './UserForm';
-import { useState } from 'react';
+import UserForm from './UserForm';
 
-export default function Create({ auth, grades, subjects = [] }) {
-    const [selectedGrades, setSelectedGrades] = useState([]);
+export default function Create({ auth, subjects = [] }) {
     const { data, setData, post, processing, errors } = useForm({
         user_id: auth.user.id,
         grades: [],
@@ -12,125 +10,6 @@ export default function Create({ auth, grades, subjects = [] }) {
         total_payment: 0,
         status: 'unpaid'
     });
-
-    // Form state untuk multiple grade forms
-    const [gradeForms, setGradeForms] = useState([{
-        id: Date.now(),
-        subject_id: '',
-        type: '',
-        grade: '',
-        kkm: '',
-        difference: '',
-        reward_amount: '',
-        date: ''
-    }]);
-
-    // Fungsi untuk menghitung difference
-    const calculateDifference = (grade, kkm) => {
-        if (!grade || !kkm) return '';
-        return Math.max(0, parseInt(grade) - parseInt(kkm));
-    };
-
-    // Fungsi untuk menghitung reward amount
-    const calculateRewardAmount = (grade, difference) => {
-        if (parseInt(grade) === 100) {
-            return 100000;
-        }
-        return parseInt(difference) * 1000;
-    };
-
-    // Handle perubahan pada form grade
-    const handleGradeFormChange = (index, e) => {
-        const { name, value } = e.target;
-        const newGradeForms = [...gradeForms];
-
-        newGradeForms[index] = {
-            ...newGradeForms[index],
-            [name]: value
-        };
-
-        // Hitung difference dan reward_amount saat grade atau kkm berubah
-        if (name === 'grade' || name === 'kkm') {
-            const grade = name === 'grade' ? value : newGradeForms[index].grade;
-            const kkm = name === 'kkm' ? value : newGradeForms[index].kkm;
-            const difference = calculateDifference(grade, kkm);
-
-            newGradeForms[index].difference = difference;
-            if (difference !== '') {
-                newGradeForms[index].reward_amount = calculateRewardAmount(grade, difference);
-            }
-        }
-
-        setGradeForms(newGradeForms);
-    };
-
-    // Fungsi untuk menambahkan semua grade ke daftar
-    const addGrades = (e) => {
-        e.preventDefault();
-
-        const validGrades = gradeForms.filter(form =>
-            form.subject_id && form.type && form.grade && form.kkm && form.date
-        ).map(grade => {
-            const difference = calculateDifference(grade.grade, grade.kkm);
-            const reward_amount = calculateRewardAmount(grade.grade, difference);
-
-            return {
-                subject_id: grade.subject_id,
-                type: grade.type,
-                grade: grade.grade,
-                kkm: grade.kkm,
-                difference: difference,
-                reward_amount: reward_amount,
-                date: grade.date,
-                id: Date.now(),
-                status: 'verified'
-            };
-        });
-
-        if (validGrades.length > 0) {
-            const updatedSelectedGrades = [...selectedGrades, ...validGrades];
-            setSelectedGrades(updatedSelectedGrades);
-
-            const totalReward = updatedSelectedGrades.reduce((total, grade) =>
-                total + grade.reward_amount, 0
-            );
-
-            setData(prev => ({
-                ...prev,
-                grades: updatedSelectedGrades,
-                total_reward_amount: totalReward
-            }));
-
-            // Reset form setelah berhasil menambahkan
-            setGradeForms([{
-                id: Date.now(),
-                subject_id: '',
-                type: '',
-                grade: '',
-                kkm: '',
-                difference: '',
-                reward_amount: '',
-                date: ''
-            }]);
-        }
-    };
-
-    // Fungsi removeGrade juga perlu diupdate
-    const removeGrade = (gradeId) => {
-        const updatedGrades = selectedGrades.filter(g => g.id !== gradeId);
-        setSelectedGrades(updatedGrades);
-
-        // Hitung ulang total reward
-        const totalReward = updatedGrades.reduce((total, grade) =>
-            total + grade.reward_amount, 0
-        );
-
-        setData(prev => ({
-            ...prev,
-            grades: updatedGrades,
-            total_reward_amount: totalReward
-        }));
-    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -140,25 +19,19 @@ export default function Create({ auth, grades, subjects = [] }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Reward</h2>}
+            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Tambah Reward Baru</h2>}
         >
-            <Head title="Create Reward" />
+            <Head title="Tambah Reward" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div className="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
-                            <Form
+                            <UserForm
                                 data={data}
                                 setData={setData}
                                 errors={errors}
                                 subjects={subjects}
-                                gradeForms={gradeForms}
-                                setGradeForms={setGradeForms}
-                                selectedGrades={selectedGrades}
-                                handleGradeFormChange={handleGradeFormChange}
-                                addGrades={addGrades}
-                                removeGrade={removeGrade}
                                 processing={processing}
                                 submit={handleSubmit}
                             />

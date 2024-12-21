@@ -17,7 +17,7 @@ export default function Index({ auth, summary, rewards }) {
     };
 
     const deleteReward = (id) => {
-        if (confirm('Are you sure you want to delete this reward?')) {
+        if (confirm('Apakah Anda yakin ingin menghapus reward ini?')) {
             router.delete(route('rewards.destroy', id));
         }
     };
@@ -25,22 +25,22 @@ export default function Index({ auth, summary, rewards }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Reward Summary</h2>}
+            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Ringkasan Reward</h2>}
         >
-            <Head title="Reward Summary" />
+            <Head title="Ringkasan Reward" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-2">
                         <div className="p-6 bg-white rounded-lg shadow dark:bg-gray-800">
-                            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Reward Amount</div>
+                            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Reward</div>
                             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                                 {formatCurrency(summary.total_reward_amount)}
                             </div>
                         </div>
                         <div className="p-6 bg-white rounded-lg shadow dark:bg-gray-800">
-                            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Payment</div>
+                            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Pembayaran</div>
                             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                 {formatCurrency(summary.total_payment)}
                             </div>
@@ -54,7 +54,7 @@ export default function Index({ auth, summary, rewards }) {
                                 <div className="flex justify-between mb-6">
                                     <Link href={route('rewards.create')}>
                                         <PrimaryButton>
-                                            Create Reward
+                                            Tambah Reward
                                         </PrimaryButton>
                                     </Link>
                                 </div>
@@ -63,26 +63,29 @@ export default function Index({ auth, summary, rewards }) {
                             <table className="w-full whitespace-nowrap">
                                 <thead>
                                     <tr className="font-bold text-left bg-gray-50 dark:bg-gray-700">
-                                        <th className="px-6 pt-5 pb-4">User</th>
-                                        <th className="px-6 pt-5 pb-4">Subject</th>
-                                        <th className="px-6 pt-5 pb-4">Type</th>
-                                        <th className="px-6 pt-5 pb-4">Grade</th>
+                                        {isAdmin && <th className="px-6 pt-5 pb-4">Pengguna</th>}
+                                        <th className="px-6 pt-5 pb-4">Mata Pelajaran</th>
+                                        <th className="px-6 pt-5 pb-4">Tipe</th>
+                                        <th className="px-6 pt-5 pb-4">Nilai</th>
                                         <th className="px-6 pt-5 pb-4">KKM</th>
-                                        <th className="px-6 pt-5 pb-4">Difference</th>
+                                        <th className="px-6 pt-5 pb-4">Selisih</th>
                                         <th className="px-6 pt-5 pb-4">Total Reward</th>
-                                        <th className="px-6 pt-5 pb-4">Payment</th>
+                                        <th className="px-6 pt-5 pb-4">Pembayaran</th>
                                         <th className="px-6 pt-5 pb-4">Status</th>
-                                        <th className="px-6 pt-5 pb-4">Actions</th>
+                                        <th className="px-6 pt-5 pb-4">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {rewards.map((reward) => (
                                         <tr key={reward.id} className="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
+
+                                            {isAdmin && (
+                                                <td className="px-6 py-4">
+                                                    {reward.user.name}
+                                                </td>
+                                            )}
                                             <td className="px-6 py-4">
-                                                {reward.user.name}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <ul>
+                                                <ul className="space-y-1">
                                                     {reward.grade.map(grade => (
                                                         <li key={grade.id}>
                                                             {grade.subject.name}
@@ -91,16 +94,16 @@ export default function Index({ auth, summary, rewards }) {
                                                 </ul>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <ul>
+                                                <ul className="space-y-1">
                                                     {reward.grade.map(grade => (
-                                                        <li key={grade.id}>
+                                                        <li key={grade.id} className="capitalize">
                                                             {grade.type}
                                                         </li>
                                                     ))}
                                                 </ul>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <ul>
+                                                <ul className="space-y-1">
                                                     {reward.grade.map(grade => (
                                                         <li key={grade.id}>
                                                             {grade.grade}
@@ -109,7 +112,7 @@ export default function Index({ auth, summary, rewards }) {
                                                 </ul>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <ul>
+                                                <ul className="space-y-1">
                                                     {reward.grade.map(grade => (
                                                         <li key={grade.id}>
                                                             {grade.kkm}
@@ -118,7 +121,7 @@ export default function Index({ auth, summary, rewards }) {
                                                 </ul>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <ul>
+                                                <ul className="space-y-1">
                                                     {reward.grade.map(grade => (
                                                         <li key={grade.id}>
                                                             {grade.difference}
@@ -138,11 +141,11 @@ export default function Index({ auth, summary, rewards }) {
                                                         ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
                                                         : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
                                                 }`}>
-                                                    {reward.status.charAt(0).toUpperCase() + reward.status.slice(1)}
+                                                    {reward.status === 'paid' ? 'Dibayar' : 'Belum Dibayar'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex gap-4 items-center">
                                                     {(isAdmin || reward.status !== 'paid') && (
                                                         <>
                                                             <Link
@@ -155,7 +158,7 @@ export default function Index({ auth, summary, rewards }) {
                                                             <DangerButton
                                                                 onClick={() => deleteReward(reward.id)}
                                                             >
-                                                                Delete
+                                                                Hapus
                                                             </DangerButton>
                                                         </>
                                                     )}
