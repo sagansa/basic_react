@@ -16,8 +16,10 @@ export default defineConfig({
         },
     },
     build: {
-           rollupOptions: {
+        outDir: 'public/build', // Pastikan ini sesuai dengan lokasi yang Anda inginkan
+        manifest: true, // Pastikan manifest dihasilkan
+        rollupOptions: {
                external: ['@headlessui/react'],
-           },
+        },
        },
 });
