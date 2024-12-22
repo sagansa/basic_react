@@ -4,7 +4,6 @@ import DangerButton from '@/Components/DangerButton';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
-import InputLabel from '@/Components/InputLabel';
 import { router } from '@inertiajs/react';
 import React, { useState } from 'react';
 
