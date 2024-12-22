@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
+import { Transition } from '@headlessui/react';
 
 export default function Dashboard() {
     return (
