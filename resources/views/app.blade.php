@@ -16,7 +16,7 @@
     @viteReactRefresh
     {{-- @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"]) --}}
     {{-- @vite(['resources/js/app.jsx']) --}}
-    @vite(['build/assets/app-ba955ea4.js'])
+    @vite(['public/build/assets/app-ba955ea4.js'])
     @inertiaHead
 </head>
 
