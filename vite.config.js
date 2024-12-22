@@ -10,10 +10,12 @@ export default defineConfig({
         },
     },
     build: {
+        outDir: 'public/build', // Output build ke public/build
         manifest: true,
         rollupOptions: {
             input: {
                 app: 'resources/js/app.jsx',
+                styles: 'resources/css/app.css', // Tambahkan file CSS jika diperlukan
             },
         },
     },
